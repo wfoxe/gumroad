@@ -24,6 +24,18 @@ describe WorkflowsController, type: :controller, inertia: true do
       expect(inertia.component).to eq("Workflows/Index")
       expect(inertia.props[:workflows]).to be_an(Array)
     end
+
+    it "exposes flash in the Inertia page data without including it in props" do
+      request.session["flash"] = ActionDispatch::Flash::FlashHash.new
+      request.session["flash"]["notice"] = "Changes saved!"
+      request.headers["X-Inertia"] = "true"
+
+      get :index
+
+      page = JSON.parse(response.body)
+      expect(page["flash"]).to eq({ "notice" => "Changes saved!" })
+      expect(page["props"]).not_to have_key("flash")
+    end
   end
 
   describe "GET new" do

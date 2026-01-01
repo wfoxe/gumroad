@@ -7,12 +7,11 @@ import { Nav } from "$app/components/client-components/Nav";
 import { CurrentSellerProvider, parseCurrentSeller } from "$app/components/CurrentSeller";
 import LoadingSkeleton from "$app/components/LoadingSkeleton";
 import { type LoggedInUser, LoggedInUserProvider, parseLoggedInUser } from "$app/components/LoggedInUser";
-import Alert, { showAlert, type AlertPayload } from "$app/components/server-components/Alert";
+import Alert, { flashToAlert, showAlert } from "$app/components/server-components/Alert";
 import useRouteLoading from "$app/components/useRouteLoading";
 
 type PageProps = {
   title: string;
-  flash?: AlertPayload;
   logged_in_user: LoggedInUser;
   current_seller: {
     id: number;
@@ -30,12 +29,15 @@ type PageProps = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { title, flash, logged_in_user, current_seller } = usePage<PageProps>().props;
+  const { props, flash } = usePage<PageProps>();
+  const { title, logged_in_user, current_seller } = props;
+  const flashAlert = flashToAlert(flash);
   const isRouteLoading = useRouteLoading();
 
   React.useEffect(() => {
-    if (flash?.message) {
-      showAlert(flash.message, flash.status === "danger" ? "error" : flash.status);
+    if (flashAlert?.message) {
+      const options = flashAlert.html !== undefined ? { html: flashAlert.html } : undefined;
+      showAlert(flashAlert.message, flashAlert.status === "danger" ? "error" : flashAlert.status, options);
     }
   }, [flash]);
 
@@ -43,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <LoggedInUserProvider value={parseLoggedInUser(logged_in_user)}>
       <CurrentSellerProvider value={parseCurrentSeller(current_seller)}>
         <Head title={title} />
-        <Alert initial={flash ?? null} />
+        <Alert initial={flashAlert} />
         <div id="inertia-shell" className="flex h-screen flex-col lg:flex-row">
           <Nav title="Dashboard" />
           {isRouteLoading ? <LoadingSkeleton /> : null}
@@ -55,11 +57,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export function LoggedInUserLayout({ children }: { children: React.ReactNode }) {
-  const { title, flash, logged_in_user, current_seller } = usePage<PageProps>().props;
+  const { props, flash } = usePage<PageProps>();
+  const { title, logged_in_user, current_seller } = props;
+  const flashAlert = flashToAlert(flash);
 
   React.useEffect(() => {
-    if (flash?.message) {
-      showAlert(flash.message, flash.status === "danger" ? "error" : flash.status);
+    if (flashAlert?.message) {
+      const options = flashAlert.html !== undefined ? { html: flashAlert.html } : undefined;
+      showAlert(flashAlert.message, flashAlert.status === "danger" ? "error" : flashAlert.status, options);
     }
   }, [flash]);
 
@@ -67,7 +72,7 @@ export function LoggedInUserLayout({ children }: { children: React.ReactNode }) 
     <LoggedInUserProvider value={parseLoggedInUser(logged_in_user)}>
       <CurrentSellerProvider value={parseCurrentSeller(current_seller)}>
         <Head title={title} />
-        <Alert initial={flash ?? null} />
+        <Alert initial={flashAlert} />
         {children}
       </CurrentSellerProvider>
     </LoggedInUserProvider>

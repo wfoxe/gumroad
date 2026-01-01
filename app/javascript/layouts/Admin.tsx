@@ -7,28 +7,30 @@ import AdminNav from "$app/components/Admin/Nav";
 import AdminNewSalesReportPopover from "$app/components/Admin/SalesReports/NewSalesReportPopover";
 import AdminSearchPopover from "$app/components/Admin/SearchPopover";
 import LoadingSkeleton from "$app/components/LoadingSkeleton";
-import Alert, { showAlert, type AlertPayload } from "$app/components/server-components/Alert";
+import Alert, { flashToAlert, showAlert } from "$app/components/server-components/Alert";
 import useRouteLoading from "$app/components/useRouteLoading";
 
 type PageProps = {
   title: string;
-  flash?: AlertPayload;
 };
 
 const Admin = ({ children }: { children: React.ReactNode }) => {
-  const { title, flash } = usePage<PageProps>().props;
+  const { props, flash } = usePage<PageProps>();
+  const { title } = props;
+  const flashAlert = flashToAlert(flash);
   const isRouteLoading = useRouteLoading();
 
   React.useEffect(() => {
-    if (flash?.message) {
-      showAlert(flash.message, flash.status === "danger" ? "error" : flash.status);
+    if (flashAlert?.message) {
+      const options = flashAlert.html !== undefined ? { html: flashAlert.html } : undefined;
+      showAlert(flashAlert.message, flashAlert.status === "danger" ? "error" : flashAlert.status, options);
     }
   }, [flash]);
 
   return (
     <div id="inertia-shell" className="flex h-screen flex-col lg:flex-row">
       <Head title={title} />
-      <Alert initial={null} />
+      <Alert initial={flashAlert} />
       <AdminNav />
       <main className="flex h-screen flex-1 flex-col overflow-y-auto">
         <header className="flex items-center justify-between border-b border-border p-4 md:p-8">

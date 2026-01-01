@@ -11,6 +11,45 @@ const ALERT_KEY = "alert";
 
 export type AlertPayload = { message: string; status: "success" | "danger" | "info" | "warning"; html?: boolean };
 
+type FlashData = Record<string, unknown>;
+
+const flashStatus = (flash: FlashData) => {
+  if (typeof flash.alert === "string") return "danger";
+  if (typeof flash.warning === "string") return "warning";
+  if (typeof flash.notice === "string") return "success";
+  return null;
+};
+
+const flashMessage = (flash: FlashData) =>
+  (typeof flash.alert === "string" && flash.alert) ||
+  (typeof flash.warning === "string" && flash.warning) ||
+  (typeof flash.notice === "string" && flash.notice) ||
+  null;
+
+export const flashToAlert = (flash?: FlashData | null): AlertPayload | null => {
+  if (!flash || typeof flash !== "object") return null;
+
+  if (
+    typeof flash.message === "string" &&
+    (flash.status === "success" || flash.status === "danger" || flash.status === "info" || flash.status === "warning")
+  ) {
+    const payload: AlertPayload = {
+      message: flash.message,
+      status: flash.status,
+    };
+    if (typeof flash.html === "boolean") {
+      payload.html = flash.html;
+    }
+    return payload;
+  }
+
+  const status = flashStatus(flash);
+  const message = flashMessage(flash);
+  if (!status || !message) return null;
+
+  return { message, status };
+};
+
 const ToastAlert = ({ initial }: { initial: AlertPayload | null }) => {
   const [alert, setAlert] = React.useState<AlertPayload | null>(initial);
   const [isVisible, setIsVisible] = React.useState(!!initial);
